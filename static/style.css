@@ -1,0 +1,114 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Вертикальное размещение контейнеров */
+    height: 100vh;
+    margin: 0;
+    background-color: #f4f4f4;
+}
+
+.container1 {
+    text-align: center;
+    width: 400px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.container2 {
+    text-align: center;
+    width: 90%;
+    height: 90%;
+    padding: 40px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+input {
+    width: 80%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+input.error {
+    border-color: red;
+}
+
+input[type="password"] {
+    position: relative;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 15px;
+    cursor: pointer;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+a {
+    text-decoration: none;
+    color: #4CAF50;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    color: red;
+    font-weight: bold;
+}
+
+/* Стили для редактируемых контейнеров */
+.editable-container {
+    text-align: center;
+    width: 300px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: 2px solid #4CAF50; /* Зеленая рамка для выделения */
+}
+
+.editable-container[contenteditable="true"] {
+    border: 2px dashed #4CAF50; /* Пунктирная рамка для редактируемого контента */
+}
+
+.editable-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.editable-container p {
+    font-size: 14px;
+    color: #55;
+}

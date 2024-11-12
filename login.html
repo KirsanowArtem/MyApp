@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container1">
+        <h1>Авторизация</h1>
+        <form action="/login" method="POST">
+            <input type="text" name="username" placeholder="Имя пользователя"
+                   class="{% if error_username %}error{% endif %}" value="{{ request.form.username }}">
+            <div class="input-wrapper">
+                <input type="password" name="password" id="password" placeholder="Пароль"
+                       class="{% if error_password %}error{% endif %}" value="{{ request.form.password }}">
+                <span class="eye-icon" onclick="togglePasswordVisibility('password')">◉</span>
+            </div>
+            <button type="submit" class="btn">Войти</button>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li style="color: red; font-weight: bold;">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <a href="/signup">Зарегистрироваться</a>
+    </div>
+
+    <script>
+        function togglePasswordVisibility(id) {
+            var passwordField = document.getElementById(id);
+            var eyeIcon = passwordField.nextElementSibling;
+
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                eyeIcon.textContent = "◎";  // Открытый глаз
+            } else {
+                passwordField.type = "password";
+                eyeIcon.textContent = "◉";  // Закрытый глаз
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Добро пожаловать</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Добро пожаловать, {{ username }}!</h1>
+
+        {% if is_admin %}
+            <p>Вы вошли как администратор.</p>
+        {% else %}
+            <p>Вы вошли как обычный пользователь.</p>
+        {% endif %}
+
+        <div class="buttons">
+            <!-- Кнопка для начала новой игры в крестики-нолики -->
+            <a href="/new_game" class="btn">Играть в Крестики-Нолики</a>
+
+            <!-- Другие кнопки, если они есть -->
+            <a href="/another_page" class="btn">Другая страница</a>
+            <!-- Добавьте другие кнопки здесь по мере необходимости -->
+        </div>
+
+        <form action="{{ url_for('logout') }}" method="post">
+            <button type="submit" class="btn">Выйти</button>
+        </form>
+    </div>
+</body>
+</html>

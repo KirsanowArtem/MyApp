@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Игра создана</title>
+</head>
+<body>
+    <div class="container2">
+        <h2>Игра создана!</h2>
+        <p>Поделитесь этим кодом с другим игроком:</p>
+        <h3>{{ game_code }}</h3>
+        <form action="/join_game" method="POST">
+            <input type="hidden" name="game_code" value="{{ game_code }}">
+            <button type="submit" class="btn">Присоединиться к игре</button>
+        </form>
+    </div>
+</body>
+</html>
