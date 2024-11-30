@@ -112,3 +112,16 @@ ul li {
     font-size: 14px;
     color: #55;
 }
+
+.input-wrapper {
+      position: relative;
+}
+
+.eye-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+}

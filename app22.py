@@ -1,3 +1,6 @@
+import string
+from random import random
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from datetime import datetime
@@ -5,11 +8,8 @@ import os
 from waitress import serve
 
 app = Flask(__name__)
-
-# Установка секретного ключа
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
-# Инициализация базы данных
 def init_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -25,8 +25,10 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Вызов инициализации базы данных при запуске приложения
 init_db()
+
+def generate_game_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 @app.route('/')
 def index():
@@ -98,19 +100,63 @@ def welcome():
 
 @app.route('/admin')
 def admin():
-    if 'username' in session and session['username'] == "Kirsanov Artem" and request.args.get('password') == "12":
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users')
-        users = cursor.fetchall()
-        conn.close()
-        return render_template('admin.html', users=users)
-    return redirect(url_for('welcome'))
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users')
+    users = cursor.fetchall()
+    conn.close()
+    return render_template('admin.html', users=users)
+
 
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
+@app.route('/new_game')
+def new_game():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    game_code = generate_game_code()
+    username = session['username']
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO games (code, player1, current_turn) VALUES (?, ?, ?)',
+                   (game_code, username, username))
+    conn.commit()
+    conn.close()
+    return render_template('game_created.html', game_code=game_code)
+
+@app.route('/join_game', methods=['POST'])
+def join_game():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    game_code = request.form.get('game_code')
+    username = session['username']
+
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM games WHERE code=? AND player2 IS NULL', (game_code,))
+    game = cursor.fetchone()
+
+    if game:
+        cursor.execute('UPDATE games SET player2 = ? WHERE code = ?', (username, game_code))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('play_game', game_code=game_code))
+    else:
+        conn.close()
+        flash('Игра не найдена или уже началась.', 'error')
+        return redirect(url_for('welcome'))
+
+@app.route('/game/<game_code>')
+def play_game(game_code):
+    return render_template('tic_tac_toe.html', game_code=game_code)
+"""
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
+"""
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

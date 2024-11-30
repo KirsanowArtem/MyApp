@@ -11,36 +11,41 @@
         <form action="/login" method="POST">
             <input type="text" name="username" placeholder="Имя пользователя"
                    class="{% if error_username %}error{% endif %}" value="{{ request.form.username }}">
+
             <div class="input-wrapper">
                 <input type="password" name="password" id="password" placeholder="Пароль"
                        class="{% if error_password %}error{% endif %}" value="{{ request.form.password }}">
                 <span class="eye-icon" onclick="togglePasswordVisibility('password')">◉</span>
             </div>
-            <button type="submit" class="btn">Войти</button>
+            <button type="submit">Войти</button>
         </form>
+
+        <form action="/signup" method="GET">
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <ul>
+                <div class="message-container">
                     {% for category, message in messages %}
-                        <li style="color: red; font-weight: bold;">{{ message }}</li>
+                        <p style="color: green; font-weight: bold; text-align: center;">{{ message }}</p>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         {% endwith %}
-        <a href="/signup">Зарегистрироваться</a>
     </div>
 
     <script>
         function togglePasswordVisibility(id) {
             var passwordField = document.getElementById(id);
-            var eyeIcon = passwordField.nextElementSibling;
+            var eyeIcon = document.querySelector('.eye-icon');
 
             if (passwordField.type === "password") {
                 passwordField.type = "text";
-                eyeIcon.textContent = "◎";  // Открытый глаз
+                eyeIcon.textContent = "◎";
             } else {
                 passwordField.type = "password";
-                eyeIcon.textContent = "◉";  // Закрытый глаз
+                eyeIcon.textContent = "◉";
             }
         }
     </script>

@@ -8,8 +8,22 @@
 <body>
     <div class="container1">
         <h1>Добро пожаловать на сайт</h1>
-        <a href="/login" class="btn">Войти</a>
-        <a href="/signup" class="btn">Зарегистрироваться</a>
+        <form action="/login" method="get">
+            <button type="submit" class="btn">Войти</button>
+        </form>
+        <form action="/signup" method="get">
+            <button type="submit" class="btn">Зарегистрироваться</button>
+        </form>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li style="color: red; font-weight: bold; text-align: center;">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
     </div>
 </body>
 </html>

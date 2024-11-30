@@ -11,22 +11,26 @@
 
         {% if is_admin %}
             <p>Вы вошли как администратор.</p>
+             <div class="buttons">
+                <div class="buttons">
+                <form action="{{ url_for('new_game') }}" method="get">
+                    <button type="submit" class="btn">Крестики-Нолики</button>
+                </form>
+                <form action="{{ url_for('admin') }}" method="get">
+                    <button type="submit" class="btn">Админ панель</button>
+                </form>
+            </div>
+            </div>
         {% else %}
             <p>Вы вошли как обычный пользователь.</p>
-        {% endif %}
-
-        <div class="buttons">
-            <!-- Кнопка для начала новой игры в крестики-нолики -->
-            <a href="/new_game" class="btn">Играть в Крестики-Нолики</a>
-
-            <!-- Другие кнопки, если они есть -->
-            <a href="/another_page" class="btn">Другая страница</a>
-            <!-- Добавьте другие кнопки здесь по мере необходимости -->
+         <div class="buttons">
+            <div class="buttons">
+                <form action="{{ url_for('new_game') }}" method="get">
+                    <button type="submit" class="btn">Крестики-Нолики</button>
+                </form>
+            </div>
         </div>
-
-        <form action="{{ url_for('logout') }}" method="post">
-            <button type="submit" class="btn">Выйти</button>
-        </form>
+        {% endif %}
     </div>
 </body>
 </html>
