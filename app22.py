@@ -3,14 +3,13 @@ import sqlite3
 from datetime import datetime
 import os
 from waitress import serve
-from app22 import app
 
 app = Flask(__name__)
 
-# Встановлення секретного ключа через змінну середовища
+# Установка секретного ключа
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
-# Ініціалізація бази даних
+# Инициализация базы данных
 def init_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -26,15 +25,13 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Виклик ініціалізації бази даних при запуску програми
+# Вызов инициализации базы данных при запуске приложения
 init_db()
 
-# Головна сторінка
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Сторінка входу
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error_username = error_password = False
@@ -58,7 +55,6 @@ def login():
 
     return render_template('login.html', error_username=error_username, error_password=error_password)
 
-# Сторінка реєстрації
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -67,12 +63,10 @@ def signup():
         confirm_password = request.form['confirm_password']
         email = request.form['email']
 
-        # Перевірка на збіг паролів
         if password != confirm_password:
             flash('Паролі не збігаються.', 'error_confirm_password')
             return render_template('signup.html', error_confirm_password=True)
 
-        # Спроба реєстрації
         with sqlite3.connect('users.db') as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -85,7 +79,6 @@ def signup():
                 flash('Ця пошта вже зареєстрована.', 'error_email')
                 return render_template('signup.html', error_email=True)
 
-            # Вставка нового користувача
             cursor.execute('INSERT INTO users (username, password, email, last_login) VALUES (?, ?, ?, ?)',
                            (username, password, email, datetime.now()))
             conn.commit()
@@ -94,7 +87,6 @@ def signup():
         return redirect(url_for('login'))
     return render_template('signup.html')
 
-# Сторінка привітання
 @app.route('/welcome')
 def welcome():
     if 'username' in session:
@@ -104,7 +96,6 @@ def welcome():
         return render_template('welcome.html', username=username)
     return redirect(url_for('index'))
 
-# Сторінка адмін-панелі
 @app.route('/admin')
 def admin():
     if 'username' in session and session['username'] == "Kirsanov Artem" and request.args.get('password') == "12":
@@ -116,12 +107,10 @@ def admin():
         return render_template('admin.html', users=users)
     return redirect(url_for('welcome'))
 
-# Вихід
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-# Запуск сервера
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
