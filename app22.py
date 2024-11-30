@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import sqlite3
 from datetime import datetime
 import os
+from waitress import serve
+from app22 import app
 
 app = Flask(__name__)
 
@@ -122,5 +124,4 @@ def logout():
 
 # Запуск сервера
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # Використовуємо порт з Render
-    app.run(host='0.0.0.0', port=port, debug=True)
+    serve(app, host='0.0.0.0', port=10000)
