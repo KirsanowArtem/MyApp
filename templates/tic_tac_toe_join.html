@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Подключиться к игре</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container1">
+        <h1>Подключитесь к игре</h1>
+        <form action="{{ url_for('join_tic_tac_toe') }}" method="POST">
+            <label for="game_code">Введите код игры:</label>
+            <input type="text" id="game_code" name="game_code" required>
+            <button type="submit">Подключиться к игре</button>
+        </form>
+    </div>
+</body>
+</html>

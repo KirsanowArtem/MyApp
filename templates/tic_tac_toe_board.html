@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Игра: {{ game_code }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Игра с кодом {{ game_code }}</h1>
+        <h2>Игрок {{ player }}: {{ game[player] }}</h2>
+        <div id="board">
+            <!-- Здесь будет игровое поле, состоящее из кнопок для крестиков-ноликов -->
+        </div>
+    </div>
+</body>
+</html>

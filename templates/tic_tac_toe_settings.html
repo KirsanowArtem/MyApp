@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки игры</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Игра с кодом {{ game_code }}</h1>
+        <form action="{{ url_for('game_board', game_code=game_code, player='p1') }}" method="get">
+            <button type="submit" class="btn">Начать игру</button>
+        </form>
+    </div>
+</body>
+</html>
