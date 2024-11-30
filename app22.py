@@ -98,15 +98,21 @@ def welcome():
         return render_template('welcome.html', username=username)
     return redirect(url_for('index'))
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users')
-    users = cursor.fetchall()
-    conn.close()
-    return render_template('admin.html', users=users)
-
+    if request.method == 'POST':
+        password = request.form['password']
+        if password == "12":
+            conn = sqlite3.connect('users.db')
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users')
+            users = cursor.fetchall()
+            conn.close()
+            return render_template('admin.html', users=users)
+        else:
+            flash('Неправильный пароль!', 'error')  # Сообщение об ошибке
+            return render_template('admin_login.html')  # Перенаправляем обратно на страницу с формой ввода пароля
+    return render_template('admin_login.html')  # Если метод GET, показываем форму для ввода пароля
 
 @app.route('/logout')
 def logout():
@@ -154,9 +160,10 @@ def join_game():
 @app.route('/game/<game_code>')
 def play_game(game_code):
     return render_template('tic_tac_toe.html', game_code=game_code)
-"""
+
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
 """
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+"""
