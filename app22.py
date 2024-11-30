@@ -122,5 +122,5 @@ def logout():
 
 # Запуск сервера
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Використовуємо порт з Render
+    port = int(os.environ.get('PORT', 10000))  # Використовуємо порт з Render
     app.run(host='0.0.0.0', port=port, debug=True)
