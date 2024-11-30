@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-     <div class="container1">
+    <div class="container1">
         <h1>Добро пожаловать, {{ username }}!</h1>
         <form action="{{ url_for('create_game') }}" method="POST">
             <button type="submit">Создать игру</button>
@@ -14,6 +14,6 @@
         <form action="{{ url_for('join_tic_tac_toe') }}" method="GET">
             <button type="submit">Подключиться к игре</button>
         </form>
-     </div>
+    </div>
 </body>
 </html>

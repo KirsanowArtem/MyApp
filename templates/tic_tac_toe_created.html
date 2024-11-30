@@ -1,18 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Игра создана</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container2">
         <h2>Игра создана!</h2>
         <p>Поделитесь этим кодом с другим игроком:</p>
         <h3>{{ game_code }}</h3>
-        <form action="/join_game" method="POST">
-            <input type="hidden" name="game_code" value="{{ game_code }}">
-            <button type="submit" class="btn">Присоединиться к игре</button>
-        </form>
+
+        {% if second_player_connected %}
+            <h3>Оба игрока подключены!</h3>
+            <form action="{{ url_for('game_board', game_code=game_code) }}" method="GET">
+                <button type="submit" class="btn">Начать игру</button>
+            </form>
+        {% else %}
+            <p>Ожидание второго игрока...</p>
+        {% endif %}
     </div>
 </body>
 </html>

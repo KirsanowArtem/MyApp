@@ -198,7 +198,7 @@ def create_game():
 
     game_code = generate_game_code()
     username = session['username']
-    conn = sqlite3.connect('games.db')  # Предполагаем, что игры хранятся в другой базе данных
+    conn = sqlite3.connect('games.db')  # Подключение к базе данных
     cursor = conn.cursor()
     cursor.execute('INSERT INTO games (code, player1, current_turn) VALUES (?, ?, ?)',
                    (game_code, username, username))
@@ -206,6 +206,7 @@ def create_game():
     conn.close()
 
     return redirect(url_for('settings_tic_tac_toe', game_code=game_code))
+
 
 @app.route('/join_game', methods=['POST'])
 def join_game():

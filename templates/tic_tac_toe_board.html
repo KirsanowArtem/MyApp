@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Игра: {{ game_code }}</title>
@@ -9,9 +9,29 @@
     <div class="container">
         <h1>Игра с кодом {{ game_code }}</h1>
         <h2>Игрок {{ player }}: {{ game[player] }}</h2>
-        <div id="board">
-            <!-- Здесь будет игровое поле, состоящее из кнопок для крестиков-ноликов -->
-        </div>
+
+        {% if second_player_connected %}
+            <div id="board">
+                <!-- Здесь будет игровое поле 3x3 -->
+                <div class="row">
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                </div>
+                <div class="row">
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                </div>
+                <div class="row">
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                    <button class="cell"></button>
+                </div>
+            </div>
+        {% else %}
+            <p>Ожидание второго игрока...</p>
+        {% endif %}
     </div>
 </body>
 </html>
