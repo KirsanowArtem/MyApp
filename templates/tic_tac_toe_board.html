@@ -1,37 +1,158 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Игра: {{ game_code }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #chat-container {
+            width: 30%;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #messages-container {
+            flex: 1;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        #message-input, #send-button {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+
+        #send-button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+
+        #game-board {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-cell {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .game-row {
+            display: flex;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Игра с кодом {{ game_code }}</h1>
-        <h2>Игрок {{ player }}: {{ game[player] }}</h2>
-
-        {% if second_player_connected %}
-            <div id="board">
-                <!-- Здесь будет игровое поле 3x3 -->
-                <div class="row">
-                    <button class="cell"></button>
-                    <button class="cell"></button>
-                    <button class="cell"></button>
-                </div>
-                <div class="row">
-                    <button class="cell"></button>
-                    <button class="cell"></button>
-                    <button class="cell"></button>
-                </div>
-                <div class="row">
-                    <button class="cell"></button>
-                    <button class="cell"></button>
-                    <button class="cell"></button>
-                </div>
-            </div>
-        {% else %}
-            <p>Ожидание второго игрока...</p>
-        {% endif %}
+    <!-- Чат -->
+    <div id="chat-container">
+        <h3>Чат</h3>
+        <div id="messages-container">
+            <!-- Сообщения будут отображаться здесь -->
+        </div>
+        <input type="text" id="message-input" placeholder="Введите сообщение...">
+        <button id="send-button">Отправить</button>
     </div>
+
+    <!-- Игровое поле -->
+    <div id="game-board">
+        <div>
+            <div class="game-row">
+                <div class="game-cell" data-cell="0">{{ game_board[0] }}</div>
+                <div class="game-cell" data-cell="1">{{ game_board[1] }}</div>
+                <div class="game-cell" data-cell="2">{{ game_board[2] }}</div>
+            </div>
+            <div class="game-row">
+                <div class="game-cell" data-cell="3">{{ game_board[3] }}</div>
+                <div class="game-cell" data-cell="4">{{ game_board[4] }}</div>
+                <div class="game-cell" data-cell="5">{{ game_board[5] }}</div>
+            </div>
+            <div class="game-row">
+                <div class="game-cell" data-cell="6">{{ game_board[6] }}</div>
+                <div class="game-cell" data-cell="7">{{ game_board[7] }}</div>
+                <div class="game-cell" data-cell="8">{{ game_board[8] }}</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Получение кода игры
+        const gameCode = "{{ game_code }}";
+        const chatUrl = `/game_board/${gameCode}/chat`;
+
+        // Функция для получения сообщений
+        function fetchMessages() {
+            fetch(chatUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const messagesContainer = document.getElementById('messages-container');
+                    messagesContainer.innerHTML = '';
+                    data.messages.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.textContent = message;
+                        messagesContainer.appendChild(messageElement);
+                    });
+                })
+                .catch(err => console.error('Error fetching messages:', err));
+        }
+
+        // Функция для отправки сообщений
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            if (message) {
+                fetch(chatUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                }).then(() => {
+                    messageInput.value = '';
+                    fetchMessages();
+                }).catch(err => console.error('Error sending message:', err));
+            }
+        }
+
+        // Слушатель события для кнопки отправки
+        document.getElementById('send-button').addEventListener('click', sendMessage);
+
+        // Автообновление сообщений каждые 1000 мс
+        setInterval(fetchMessages, 1000);
+
+        // Инициализация загрузки сообщений
+        fetchMessages();
+    </script>
 </body>
 </html>

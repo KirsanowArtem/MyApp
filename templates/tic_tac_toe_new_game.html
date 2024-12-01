@@ -1,19 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Создать или Подключиться к игре</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новая игра</title>
 </head>
 <body>
-    <div class="container1">
-        <h1>Добро пожаловать, {{ username }}!</h1>
-        <form action="{{ url_for('create_game') }}" method="POST">
-            <button type="submit">Создать игру</button>
-        </form>
-        <form action="{{ url_for('join_tic_tac_toe') }}" method="GET">
-            <button type="submit">Подключиться к игре</button>
-        </form>
-    </div>
+    <h1>Создать или присоединиться к игре</h1>
+    <a href="{{ url_for('settings_tic_tac_toe', game_code=generate_game_code()) }}">Создать игру</a><br>
+    <a href="{{ url_for('join_game') }}">Присоединиться</a>
 </body>
 </html>

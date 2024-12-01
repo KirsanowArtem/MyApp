@@ -2,15 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Настройки игры</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Игра с кодом {{ game_code }}</h1>
-        <form action="{{ url_for('game_board', game_code=game_code, player='p1') }}" method="get">
-            <button type="submit" class="btn">Начать игру</button>
-        </form>
-    </div>
+    <h1>Настройки игры</h1>
+    <p>Игра с кодом: {{ game_code }}</p>
+    <a href="{{ url_for('game_board', game_code=game_code, player='p1') }}">Начать игру</a>
 </body>
 </html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-нолики</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+        }
+        .game-container {
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .cell.taken {
+            cursor: not-allowed;
+        }
+        .info {
+            margin: 20px 0;
+        }
+        .waiting {
+            color: #999;
+        }
+        .turn {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Крестики-нолики</h1>
+
+    <div class="info">
+        {% if waiting_for_player2 %}
+            <p class="waiting">Ожидание второго игрока...</p>
+        {% else %}
+            <p>Сейчас ходит: <span class="turn">{{ '❌' if current_turn == 'p1' else '⭕️' }}</span></p>
+        {% endif %}
+    </div>
+
+    <div class="game-container">
+        <div class="board">
+            {% for pos in range(9) %}
+                <div
+                    class="cell {% if board[pos] != '-' %}taken{% endif %}"
+                    onclick="makeMove({{ pos }})">
+                    {{ board[pos] if board[pos] != '-' else '' }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        const gameCode = "{{ game_code }}";
+        const player = "{{ player }}";
+
+        function makeMove(position) {
+            // Получаем элемент клетки по позиции
+            const cell = document.querySelector(`.cell:nth-child(${position + 1})`);
+
+            // Проверяем, не занята ли клетка
+            if (cell.classList.contains('taken')) {
+                return;  // Если клетка занята, не отправляем запрос
+            }
+
+            // Отправляем запрос на сервер для выполнения хода
+            fetch(`/make_move/${gameCode}/${player}/${position}`, {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Перезагрузка страницы для обновления доски
+                } else {
+                    alert(data.message || "Ошибка выполнения хода");
+                }
+            })
+            .catch(error => console.error("Ошибка:", error));
+        }
+    </script>
+</body>
+</html>
