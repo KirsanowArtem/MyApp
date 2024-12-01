@@ -11,8 +11,8 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
 game_chats = {}
 
-# Пример хранения сообщений в памяти (для демонстрации)
-game_messages = {}
+game_messages = {}  # {game_code: [messages]}
+
 
 def add_message(game_code, message):
     if game_code not in game_messages:

@@ -8,6 +8,7 @@ from waitress import serve
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
+games = {}
 
 game_chats = {}
 
@@ -85,7 +86,7 @@ def get_game_data(game_code):
 
 @app.route('/')
 def index():
-    return render_template('main_index.html')
+    return render_template('aa1.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -235,6 +236,64 @@ def game_board(game_code, player):
 
     return render_template('tic_tac_toe_board.html', game_code=game_code, player=player, messages=messages, game_board=game_board)
 
+
+
+
+
+
+
+
+
+
+
+@app.route('/h/<game_code>/<player>', methods=['GET', 'POST'])
+def h_game_board(game_code, player):
+    game = games.get(game_code)
+    if not game:
+        flash("Игра не найдена!", "error")
+        return redirect(url_for('index'))
+
+    # Обработка сообщений
+    if request.method == 'POST':
+        message = request.form.get('message')
+        if message:
+            formatted_message = f"Игрок {player}: {message}"
+            game['messages'].append(formatted_message)
+
+    return render_template('h1.html', game_code=game_code, player=player, game_board=game['board'], messages=game['messages'])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/h/new', methods=['POST'])
+def new_game_h():
+    game_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    games[game_code] = {"board": [" "] * 9, "messages": []}
+    return redirect(url_for('h_game_board', game_code=game_code, player='p1'))
+
+
+@app.route('/h/join', methods=['POST'])
+def join_game_h():
+    game_code = request.form.get('game_code')
+    if game_code in games:
+        return redirect(url_for('h_game_board', game_code=game_code, player='p2'))
+    else:
+        flash("Код игры не найден!", "error")
+        return redirect(url_for('index'))
 
 
 @app.route('/logout')
