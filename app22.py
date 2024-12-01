@@ -235,16 +235,15 @@ def game_board(game_code, player):
 
     return render_template('tic_tac_toe_board.html', game_code=game_code, player=player, messages=messages, game_board=game_board)
 
-
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-"""
+
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
 """
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+"""
