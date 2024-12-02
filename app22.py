@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
 game_chats = {}
-
+player_names = {}
 game_messages = {}  # {game_code: [messages]}
 
 
@@ -26,6 +26,15 @@ def get_game_board(game_code):
     # Пример возвращаемого поля для игры 3x3
     # Это может быть запрос к базе данных или к структуре данных
     return [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+
+def get_player_names(game_code):
+    # Пример получения имен игроков из базы данных
+    # Верните словарь {'p1': 'Имя игрока 1', 'p2': 'Имя игрока 2'}
+    return {
+        'p1': 'Игрок 1',
+        'p2': 'Игрок 2'
+    }
+
 
 def init_db():
     conn = sqlite3.connect('users.db')
@@ -222,18 +231,31 @@ def make_move(game_code, player, position):
 
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
-    if request.method == 'POST':
-        message = request.form.get('message')  # Получаем сообщение из формы
-        # Логика для сохранения или передачи сообщения другим игрокам
-        add_message(game_code, message)
+    # Получаем имена игроков
+    player_names = get_player_names(game_code)
+    current_player_name = player_names.get(player, player)
 
-    # Получаем список сообщений для этого игрового кода
+    if request.method == 'POST':
+        message = request.form.get('message')
+        if message:
+            # Добавляем имя игрока в сообщение
+            add_message(game_code, f"{current_player_name}: {message}")
+
+    # Получаем список сообщений
     messages = get_messages(game_code)
 
-    # Получаем игровое поле (например, из базы данных)
-    game_board = get_game_board(game_code)  # Эта функция должна вернуть список из 9 элементов для поля
+    # Получаем игровое поле
+    game_board = get_game_board(game_code)
 
-    return render_template('tic_tac_toe_board.html', game_code=game_code, player=player, messages=messages, game_board=game_board)
+    return render_template(
+        'tic_tac_toe_board.html',
+        game_code=game_code,
+        player=player,
+        messages=messages,
+        game_board=game_board,
+        player_name=current_player_name
+    )
+
 
 @app.route('/logout')
 def logout():
