@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe</title>
     <style>
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin: 20px 0;
+        }
         body {
             display: flex;
             margin: 0;
@@ -26,7 +31,6 @@
             border-bottom: 1px solid #ccc;
             margin-bottom: 10px;
             padding: 5px;
-            max-height: 80vh; /* Максимальная высота для прокрутки */
         }
         #message-input, #send-button {
             width: 100%;
@@ -75,38 +79,62 @@
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 0; /* Скрываем текст кнопки */
+            font-size: 0;
         }
         .cell-button:hover {
             background-color: rgba(0, 255, 0, 0.3);
         }
     </style>
-    <script>
-        // Функция для получения новых сообщений
-        function fetchMessages() {
-            fetch(`/get_messages/{{ game_code }}`)
-                .then(response => response.json())
-                .then(data => {
-                    const messagesContainer = document.getElementById('messages-container');
-                    messagesContainer.innerHTML = ''; // Очищаем контейнер
+<script>
+    // Сохранение сообщений в localStorage
+    function saveMessagesLocally(messages) {
+        localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
 
-                    // Добавляем новые сообщения
-                    data.messages.forEach(message => {
-                        const messageElement = document.createElement('div');
-                        messageElement.innerHTML = message;
-                        messagesContainer.appendChild(messageElement);
-                    });
+    // Загрузка сообщений из localStorage
+    function loadMessagesLocally() {
+        const savedMessages = localStorage.getItem('chatMessages');
+        return savedMessages ? JSON.parse(savedMessages) : [];
+    }
 
-                    // Автопрокрутка вниз
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                })
-                .catch(error => console.error('Ошибка загрузки сообщений:', error));
-        }
+    // Обновление чата
+    function fetchMessages() {
+        fetch(`/get_messages/{{ game_code }}`)
+            .then(response => response.json())
+            .then(data => {
+                const messagesContainer = document.getElementById('messages-container');
+                messagesContainer.innerHTML = ''; // Очищаем контейнер
 
-        // Опрос сервера каждые 2 секунды
-        setInterval(fetchMessages, 2000);
+                // Добавляем новые сообщения
+                saveMessagesLocally(data.messages); // Сохраняем сообщения в localStorage
+                data.messages.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    messageElement.innerHTML = message;
+                    messagesContainer.appendChild(messageElement);
+                });
 
-        // Обработчик отправки сообщения
+                // Автопрокрутка вниз
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            })
+            .catch(error => console.error('Ошибка загрузки сообщений:', error));
+    }
+
+    // Загрузка сообщений из localStorage при загрузке страницы
+    window.addEventListener('DOMContentLoaded', () => {
+        const messages = loadMessagesLocally();
+        const messagesContainer = document.getElementById('messages-container');
+        messages.forEach(message => {
+            const messageElement = document.createElement('div');
+            messageElement.innerHTML = message;
+            messagesContainer.appendChild(messageElement);
+        });
+
+        // Добавим автообновление сообщений каждую секунду
+        setInterval(fetchMessages, 1000); // 1000 мс = 1 секунда
+    });
+
+    // Отправка сообщения
+    document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('form');
         form.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -119,16 +147,18 @@
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `message=${encodeURIComponent(message)}`
             })
-                .then(() => {
-                    messageInput.value = '';
-                    fetchMessages(); // Обновляем сообщения после отправки
+                .then(response => {
+                    if (response.ok) {
+                        messageInput.value = ''; // Очищаем поле ввода
+                        fetchMessages(); // Обновляем чат
+                    } else {
+                        console.error('Ошибка отправки сообщения:', response.statusText);
+                    }
                 })
                 .catch(error => console.error('Ошибка отправки сообщения:', error));
         });
-
-        // Изначальная загрузка сообщений
-        fetchMessages();
-    </script>
+    });
+</script>
 </head>
 <body>
     <!-- Чат -->
@@ -145,6 +175,11 @@
             <button type="submit" id="send-button">Отправить</button>
         </form>
     </div>
+
+    <!-- Сообщение об ошибке -->
+    {% if error_message %}
+        <div class="error-message">{{ error_message }}</div>
+    {% endif %}
 
     <!-- Игровое поле -->
     <div id="game-board">
