@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Настройки игры</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Настройки игры</h1>
-    <p>Игра с кодом: {{ game_code }}</p>
-    <a href="{{ url_for('game_board', game_code=game_code, player='p1') }}">Начать игру</a>
+    <div class="container1">
+        <h1>Настройки игры</h1>
+        <p>Игра с кодом: {{ game_code }}</p>
+        <form action="{{ url_for('game_board', game_code=game_code, player='p1') }}" method="GET">
+            <button type="submit">Начать игру</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -5,82 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe</title>
     <style>
-        /* Основной стиль для тела страницы */
+        /* Стиль для сообщения об ошибке */
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        /* Остальные стили остаются без изменений */
         body {
-            display: flex; /* Используем flexbox для выравнивания */
-            margin: 0; /* Убираем стандартные отступы */
-            font-family: Arial, sans-serif; /* Устанавливаем шрифт */
+            display: flex;
+            margin: 0;
+            font-family: Arial, sans-serif;
         }
-
-        /* Контейнер чата */
         #chat-container {
-            width: 20%; /* Ширина контейнера чата */
-            border-right: 1px solid #ccc; /* Граница справа */
-            padding: 10px; /* Отступы внутри контейнера */
-            box-sizing: border-box; /* Учитываем отступы и границы в размере */
-            height: 100vh; /* Высота 100% от экрана */
-            overflow-y: auto; /* Скролл по вертикали, если сообщений много */
-            display: flex; /* Используем flexbox для выравнивания */
-            flex-direction: column; /* Элементы чата располагаются по вертикали */
+            width: 20%;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
-
-        /* Контейнер для сообщений */
         #messages-container {
-            flex: 1; /* Растягиваем контейнер сообщений на оставшееся пространство */
-            overflow-y: auto; /* Скроллинг по вертикали */
-            border-bottom: 1px solid #ccc; /* Граница снизу */
-            margin-bottom: 10px; /* Отступ снизу */
-            padding: 5px; /* Отступы внутри контейнера */
+            flex: 1;
+            overflow-y: auto;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+            padding: 5px;
         }
-
-        /* Поле для ввода сообщения и кнопка отправки */
         #message-input, #send-button {
-            width: 100%; /* Ширина на всю доступную площадь */
-            height: 10vh; /* Высота 100% от экрана */
-            box-sizing: border-box; /* Учитываем отступы и границы в размере */
-            margin-top: 5px; /* Отступ сверху */
+            width: 100%;
+            height: 10vh;
+            box-sizing: border-box;
+            margin-top: 5px;
         }
-
-        /* Стиль кнопки отправки сообщения */
         #send-button {
-            background-color: #007BFF; /* Синий фон */
-            color: white; /* Белый текст */
-            border: none; /* Без границы */
-            padding: 10px; /* Внутренний отступ */
-            cursor: pointer; /* Курсор как указатель */
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
         }
-
-        /* Стиль при наведении на кнопку */
         #send-button:hover {
-            background-color: #0056b3; /* Темнее синий при наведении */
+            background-color: #0056b3;
         }
-
-        /* Контейнер для игрового поля */
         #game-board {
-            flex: 1; /* Растягиваем контейнер на оставшееся пространство */
-            display: flex; /* Используем flexbox для выравнивания */
-            align-items: center; /* Выравнивание по вертикали */
-            justify-content: center; /* Выравнивание по горизонтали */
-            padding: 20px; /* Отступы внутри контейнера */
-            box-sizing: border-box; /* Учитываем отступы и границы в размере */
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
-
-        /* Стиль для ячеек игрового поля */
         .game-cell {
-            width: 100px; /* Ширина ячейки */
-            height: 100px; /* Высота ячейки */
-            border: 1px solid #ccc; /* Граница вокруг ячейки */
-            display: flex; /* Используем flexbox для выравнивания содержимого */
-            align-items: center; /* Вертикальное выравнивание */
-            justify-content: center; /* Горизонтальное выравнивание */
-            font-size: 24px; /* Размер шрифта */
-            font-weight: bold; /* Жирный шрифт */
-            cursor: pointer; /* Курсор как указатель */
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
         }
-
-        /* Стиль для строк игрового поля */
         .game-row {
-            display: flex; /* Элементы в строке выравниваются по горизонтали */
+            display: flex;
         }
     </style>
     <script>
@@ -97,6 +87,32 @@
 
         // Обновление сообщений каждые 3 секунды
         setInterval(fetchMessages, 3000);
+
+        // сетка 3 на 3
+        document.querySelectorAll('.game-cell').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const cellIndex = this.getAttribute('data-cell');
+                const currentPlayer = '{{ player }}';  // Текущий игрок (p1 или p2)
+                const gameCode = '{{ game_code }}';    // Код игры
+
+                fetch(`/game_board/${gameCode}/${currentPlayer}/move/${cellIndex}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cell: cellIndex })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Обновляем отображение доски
+                        document.querySelectorAll('.game-cell')[cellIndex].innerText = data.symbol;
+                    } else {
+                        alert(data.error);
+                    }
+                });
+            });
+        });
     </script>
 </head>
 <body>
@@ -115,23 +131,46 @@
         </form>
     </div>
 
+    <!-- Сообщение об ошибке -->
+    {% if error_message %}
+        <div class="error-message">{{ error_message }}</div>
+    {% endif %}
+
     <!-- Игровое поле -->
     <div id="game-board">
         <div>
             <div class="game-row">
-                <div class="game-cell" data-cell="0">{{ game_board[0] }}</div>
-                <div class="game-cell" data-cell="1">{{ game_board[1] }}</div>
-                <div class="game-cell" data-cell="2">{{ game_board[2] }}</div>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="0">{{ game_board[0] }}</button>
+                </form>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="1">{{ game_board[1] }}</button>
+                </form>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="2">{{ game_board[2] }}</button>
+                </form>
             </div>
             <div class="game-row">
-                <div class="game-cell" data-cell="3">{{ game_board[3] }}</div>
-                <div class="game-cell" data-cell="4">{{ game_board[4] }}</div>
-                <div class="game-cell" data-cell="5">{{ game_board[5] }}</div>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="3">{{ game_board[3] }}</button>
+                </form>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="4">{{ game_board[4] }}</button>
+                </form>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="5">{{ game_board[5] }}</button>
+                </form>
             </div>
             <div class="game-row">
-                <div class="game-cell" data-cell="6">{{ game_board[6] }}</div>
-                <div class="game-cell" data-cell="7">{{ game_board[7] }}</div>
-                <div class="game-cell" data-cell="8">{{ game_board[8] }}</div>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="6">{{ game_board[6] }}</button>
+                </form>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="7">{{ game_board[7] }}</button>
+                </form>
+                <form method="POST">
+                    <button type="submit" class="game-cell" name="cell" value="8">{{ game_board[8] }}</button>
+                </form>
             </div>
         </div>
     </div>

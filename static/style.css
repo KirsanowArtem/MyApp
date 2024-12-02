@@ -125,3 +125,14 @@ ul li {
     cursor: pointer;
     font-size: 18px;
 }
+
+.centered-message {
+    text-align: center; /* Центрирует текст */
+    font-size: 35px;   /* Размер шрифта */
+    margin: 20px 0;    /* Отступы сверху и снизу */
+    font-weight: bold; /* Делает текст жирным (опционально) */
+}
+.error {
+    font-size: 35px; /* Размер шрифта */
+    text-align: center; /* Центрирование текста */
+    color: #ff0000; /* Красный цвет текста */

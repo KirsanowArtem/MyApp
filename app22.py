@@ -212,20 +212,39 @@ def tic_tac_toe_game(game_code, player):
     game_data = get_game_data(game_code)
     return render_template('tic_tac_toe_board.html', game_data=game_data, game_code=game_code, player=player)
 
-@app.route('/make_move/<game_code>/<player>/<int:position>', methods=['POST'])
-def make_move(game_code, player, position):
-    game_data = get_game_data(game_code)
-    if game_data is None:
-        return "Игра не найдена.", 404
-    board = game_data["board"]
-    if board[position] == '-':
-        board[position] = 'X' if player == 'player1' else 'O'
+@app.route('/game_board/<game_code>/<player>/move/<int:cell_index>', methods=['POST'])
+def make_move(game_code, player, cell_index):
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
-    cursor.execute('UPDATE games SET board=? WHERE code=?', (''.join(board), game_code))
+    cursor.execute('SELECT * FROM games WHERE code=?', (game_code,))
+    game = cursor.fetchone()
+
+    if game is None:
+        return {'success': False, 'error': 'Игра не найдена'}, 404
+
+    current_turn = game[4]  # player1 или player2
+    board = list(game[3])  # Преобразуем строку в список
+
+    # Проверяем, чей ход
+    if (player == 'p1' and current_turn != 'player1') or (player == 'p2' and current_turn != 'player2'):
+        return {'success': False, 'error': 'Не ваш ход'}, 400
+
+    # Проверяем, что ячейка не занята
+    if board[cell_index] != '-':
+        return {'success': False, 'error': 'Эта ячейка уже занята'}, 400
+
+    # Обновляем доску
+    symbol = 'X' if player == 'p1' else 'O'
+    board[cell_index] = symbol
+    board_str = ''.join(board)
+
+    # Обновляем доску в базе данных
+    cursor.execute('UPDATE games SET board=?, current_turn=? WHERE code=?', (board_str, 'player2' if current_turn == 'player1' else 'player1', game_code))
     conn.commit()
     conn.close()
-    return redirect(url_for('tic_tac_toe_game', game_code=game_code, player=player))
+
+    return {'success': True, 'symbol': symbol}
+
 
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
@@ -246,7 +265,8 @@ def game_board(game_code, player):
             conn.close()
             return redirect(url_for('game_board', game_code=game_code, player='p1'))
         else:
-            return "Игра с таким кодом не существует!", 404
+            errors = f'<b><p style="font-size: 100px; color: red; ">Eror 404<br>Игра с таким кодом не найдена!</b>'
+            return errors, 404
 
     if player == 'p2':
         player2_name = session['username']
@@ -263,7 +283,7 @@ def game_board(game_code, player):
         message = request.form.get('message')
         if message:
             # Добавляем форматирование имени игрока и двоеточия
-            formatted_message = f"<b>{current_player_name}:</b><br> {message}"
+            formatted_message = f"<b>{current_player_name}:</b><br>  {message}"
             add_message(game_code, formatted_message)
 
     messages = get_messages(game_code)

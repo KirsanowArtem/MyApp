@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Новая игра</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Создать или присоединиться к игре</h1>
-    <a href="{{ url_for('settings_tic_tac_toe', game_code=generate_game_code()) }}">Создать игру</a><br>
-    <a href="{{ url_for('join_game') }}">Присоединиться</a>
+    <div class="container1">
+        <h1>Меню крестики-нолики</h1>
+        <form action="{{ url_for('settings_tic_tac_toe', game_code=generate_game_code()) }}" method="GET">
+            <button type="submit">Создать игру</button>
+        </form>
+        <form action="{{ url_for('join_game') }}" method="GET">
+            <button type="submit">Присоединиться</button>
+        </form>
+    </div>
 </body>
 </html>
