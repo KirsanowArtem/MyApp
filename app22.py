@@ -306,7 +306,6 @@ def get_messages_route(game_code):
     messages = get_messages(game_code)  # Функция должна возвращать список сообщений из базы данных
     return jsonify({'messages': messages})
 
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)

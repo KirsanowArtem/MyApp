@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe</title>
     <style>
-        /* Стиль для сообщения об ошибке */
-        .error-message {
-            color: red;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        /* Остальные стили остаются без изменений */
         body {
             display: flex;
             margin: 0;
@@ -33,6 +26,7 @@
             border-bottom: 1px solid #ccc;
             margin-bottom: 10px;
             padding: 5px;
+            max-height: 80vh; /* Максимальная высота для прокрутки */
         }
         #message-input, #send-button {
             width: 100%;
@@ -88,44 +82,52 @@
         }
     </style>
     <script>
-        function makeMove(cellIndex) {
-            fetch(`/game_board/${gameCode}/${player}/move/${cellIndex}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log("Ход успешно выполнен");
-                    updateBoard(data.board);
-                } else {
-                    console.error(data.error);
-                    alert(data.error);
-                }
-            });
+        // Функция для получения новых сообщений
+        function fetchMessages() {
+            fetch(`/get_messages/{{ game_code }}`)
+                .then(response => response.json())
+                .then(data => {
+                    const messagesContainer = document.getElementById('messages-container');
+                    messagesContainer.innerHTML = ''; // Очищаем контейнер
+
+                    // Добавляем новые сообщения
+                    data.messages.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.innerHTML = message;
+                        messagesContainer.appendChild(messageElement);
+                    });
+
+                    // Автопрокрутка вниз
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                })
+                .catch(error => console.error('Ошибка загрузки сообщений:', error));
         }
 
-        function handleClick(button) {
-            const cellIndex = button.getAttribute('data-cell');
-            const currentPlayer = '{{ player }}';  // Текущий игрок (p1 или p2)
-            const gameCode = '{{ game_code }}';    // Код игры
+        // Опрос сервера каждые 2 секунды
+        setInterval(fetchMessages, 2000);
 
-            fetch(`/game_board/${gameCode}/${currentPlayer}/move/${cellIndex}`, {
+        // Обработчик отправки сообщения
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value;
+
+            // Отправляем сообщение на сервер
+            fetch(location.href, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ cell: cellIndex })
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `message=${encodeURIComponent(message)}`
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Обновляем отображение доски
-                    button.parentElement.textContent = data.symbol;
-                } else {
-                    alert(data.error);
-                }
-            });
-        }
+                .then(() => {
+                    messageInput.value = '';
+                    fetchMessages(); // Обновляем сообщения после отправки
+                })
+                .catch(error => console.error('Ошибка отправки сообщения:', error));
+        });
+
+        // Изначальная загрузка сообщений
+        fetchMessages();
     </script>
 </head>
 <body>
@@ -143,11 +145,6 @@
             <button type="submit" id="send-button">Отправить</button>
         </form>
     </div>
-
-    <!-- Сообщение об ошибке -->
-    {% if error_message %}
-        <div class="error-message">{{ error_message }}</div>
-    {% endif %}
 
     <!-- Игровое поле -->
     <div id="game-board">
