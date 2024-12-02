@@ -58,61 +58,74 @@
             padding: 20px;
             box-sizing: border-box;
         }
+        .game-row {
+            display: flex;
+        }
         .game-cell {
             width: 100px;
             height: 100px;
+            position: relative;
             border: 1px solid #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
             font-weight: bold;
-            cursor: pointer;
         }
-        .game-row {
-            display: flex;
+        .cell-button {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0; /* Скрываем текст кнопки */
+        }
+        .cell-button:hover {
+            background-color: rgba(0, 255, 0, 0.3);
         }
     </style>
     <script>
-        function fetchMessages() {
-            fetch(window.location.href)
-                .then(response => response.text())
-                .then(data => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(data, "text/html");
-                    const newMessages = doc.querySelector("#messages-container").innerHTML;
-                    document.querySelector("#messages-container").innerHTML = newMessages;
-                });
+        function makeMove(cellIndex) {
+            fetch(`/game_board/${gameCode}/${player}/move/${cellIndex}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log("Ход успешно выполнен");
+                    updateBoard(data.board);
+                } else {
+                    console.error(data.error);
+                    alert(data.error);
+                }
+            });
         }
 
-        // Обновление сообщений каждые 3 секунды
-        setInterval(fetchMessages, 3000);
+        function handleClick(button) {
+            const cellIndex = button.getAttribute('data-cell');
+            const currentPlayer = '{{ player }}';  // Текущий игрок (p1 или p2)
+            const gameCode = '{{ game_code }}';    // Код игры
 
-        // сетка 3 на 3
-        document.querySelectorAll('.game-cell').forEach(cell => {
-            cell.addEventListener('click', function() {
-                const cellIndex = this.getAttribute('data-cell');
-                const currentPlayer = '{{ player }}';  // Текущий игрок (p1 или p2)
-                const gameCode = '{{ game_code }}';    // Код игры
-
-                fetch(`/game_board/${gameCode}/${currentPlayer}/move/${cellIndex}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ cell: cellIndex })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Обновляем отображение доски
-                        document.querySelectorAll('.game-cell')[cellIndex].innerText = data.symbol;
-                    } else {
-                        alert(data.error);
-                    }
-                });
+            fetch(`/game_board/${gameCode}/${currentPlayer}/move/${cellIndex}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cell: cellIndex })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновляем отображение доски
+                    button.parentElement.textContent = data.symbol;
+                } else {
+                    alert(data.error);
+                }
             });
-        });
+        }
     </script>
 </head>
 <body>
@@ -140,37 +153,46 @@
     <div id="game-board">
         <div>
             <div class="game-row">
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="0">{{ game_board[0] }}</button>
-                </form>
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="1">{{ game_board[1] }}</button>
-                </form>
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="2">{{ game_board[2] }}</button>
-                </form>
+                <div class="game-cell">
+                    {{ game_board[0] }}
+                    <button class="cell-button" data-cell="0" onclick="handleClick(this)"></button>
+                </div>
+                <div class="game-cell">
+                    {{ game_board[1] }}
+                    <button class="cell-button" data-cell="1" onclick="handleClick(this)"></button>
+                </div>
+                <div class="game-cell">
+                    {{ game_board[2] }}
+                    <button class="cell-button" data-cell="2" onclick="handleClick(this)"></button>
+                </div>
             </div>
             <div class="game-row">
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="3">{{ game_board[3] }}</button>
-                </form>
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="4">{{ game_board[4] }}</button>
-                </form>
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="5">{{ game_board[5] }}</button>
-                </form>
+                <div class="game-cell">
+                    {{ game_board[3] }}
+                    <button class="cell-button" data-cell="3" onclick="handleClick(this)"></button>
+                </div>
+                <div class="game-cell">
+                    {{ game_board[4] }}
+                    <button class="cell-button" data-cell="4" onclick="handleClick(this)"></button>
+                </div>
+                <div class="game-cell">
+                    {{ game_board[5] }}
+                    <button class="cell-button" data-cell="5" onclick="handleClick(this)"></button>
+                </div>
             </div>
             <div class="game-row">
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="6">{{ game_board[6] }}</button>
-                </form>
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="7">{{ game_board[7] }}</button>
-                </form>
-                <form method="POST">
-                    <button type="submit" class="game-cell" name="cell" value="8">{{ game_board[8] }}</button>
-                </form>
+                <div class="game-cell">
+                    {{ game_board[6] }}
+                    <button class="cell-button" data-cell="6" onclick="handleClick(this)"></button>
+                </div>
+                <div class="game-cell">
+                    {{ game_board[7] }}
+                    <button class="cell-button" data-cell="7" onclick="handleClick(this)"></button>
+                </div>
+                <div class="game-cell">
+                    {{ game_board[8] }}
+                    <button class="cell-button" data-cell="8" onclick="handleClick(this)"></button>
+                </div>
             </div>
         </div>
     </div>

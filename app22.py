@@ -20,26 +20,20 @@ def get_messages(game_code):
     return game_messages.get(game_code, [])
 
 def get_game_board(game_code):
-    return [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+    conn = sqlite3.connect('games.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT board FROM games WHERE code=?', (game_code,))
+    board = cursor.fetchone()
+    conn.close()
+    return list(board[0]) if board else None
 
 def get_player_names(game_code):
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
-
-    cursor.execute("SELECT player1, player2 FROM games WHERE code = ?", (game_code,))
-    game_data = cursor.fetchone()
+    cursor.execute('SELECT player1, player2 FROM games WHERE code=?', (game_code,))
+    players = cursor.fetchone()
     conn.close()
-
-    if game_data:
-        return {
-            'p1': game_data[0],
-            'p2': game_data[1]
-        }
-    else:
-        return {
-            'p1': 'Игрок 1',
-            'p2': 'Игрок 2'
-        }
+    return {"p1": players[0], "p2": players[1]} if players else {}
 
 
 def init_db():
@@ -212,38 +206,46 @@ def tic_tac_toe_game(game_code, player):
     game_data = get_game_data(game_code)
     return render_template('tic_tac_toe_board.html', game_data=game_data, game_code=game_code, player=player)
 
-@app.route('/game_board/<game_code>/<player>/move/<int:cell_index>', methods=['POST'])
-def make_move(game_code, player, cell_index):
+@app.route('/game/<game_code>/move', methods=['POST'])
+def make_move(game_code):
+    data = request.get_json()
+    cell_index = data.get('cell_index')
+    player = data.get('player')
+
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM games WHERE code=?', (game_code,))
-    game = cursor.fetchone()
 
-    if game is None:
-        return {'success': False, 'error': 'Игра не найдена'}, 404
+    # Получаем текущую доску и ход
+    cursor.execute('SELECT board, current_turn FROM games WHERE code=?', (game_code,))
+    game_data = cursor.fetchone()
 
-    current_turn = game[4]  # player1 или player2
-    board = list(game[3])  # Преобразуем строку в список
+    if not game_data:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Игра не найдена'})
 
-    # Проверяем, чей ход
-    if (player == 'p1' and current_turn != 'player1') or (player == 'p2' and current_turn != 'player2'):
-        return {'success': False, 'error': 'Не ваш ход'}, 400
+    board, current_turn = list(game_data[0]), game_data[1]
 
-    # Проверяем, что ячейка не занята
-    if board[cell_index] != '-':
-        return {'success': False, 'error': 'Эта ячейка уже занята'}, 400
+    # Проверяем, чей ход и корректность ячейки
+    if current_turn != player:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Сейчас не ваш ход'})
+
+    if board[int(cell_index)] != '-':
+        conn.close()
+        return jsonify({'success': False, 'error': 'Клетка уже занята'})
 
     # Обновляем доску
-    symbol = 'X' if player == 'p1' else 'O'
-    board[cell_index] = symbol
-    board_str = ''.join(board)
+    board[int(cell_index)] = 'X' if player == 'p1' else 'O'
+    next_turn = 'p2' if current_turn == 'p1' else 'p1'
 
-    # Обновляем доску в базе данных
-    cursor.execute('UPDATE games SET board=?, current_turn=? WHERE code=?', (board_str, 'player2' if current_turn == 'player1' else 'player1', game_code))
+    # Сохраняем изменения в базе данных
+    cursor.execute('UPDATE games SET board=?, current_turn=? WHERE code=?',
+                   (''.join(board), next_turn, game_code))
     conn.commit()
     conn.close()
 
-    return {'success': True, 'symbol': symbol}
+    return jsonify({'success': True, 'board': ''.join(board), 'next_turn': next_turn})
+
 
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
@@ -305,10 +307,9 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-
+"""
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
 """
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-"""
