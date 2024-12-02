@@ -8,11 +8,7 @@ from waitress import serve
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
-games = {}
-
-game_chats = {}
-
-# Пример хранения сообщений в памяти (для демонстрации)
+player_names = {}
 game_messages = {}
 
 def add_message(game_code, message):
@@ -24,9 +20,27 @@ def get_messages(game_code):
     return game_messages.get(game_code, [])
 
 def get_game_board(game_code):
-    # Пример возвращаемого поля для игры 3x3
-    # Это может быть запрос к базе данных или к структуре данных
     return [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+
+def get_player_names(game_code):
+    conn = sqlite3.connect('games.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT player1, player2 FROM games WHERE code = ?", (game_code,))
+    game_data = cursor.fetchone()
+    conn.close()
+
+    if game_data:
+        return {
+            'p1': game_data[0],
+            'p2': game_data[1]
+        }
+    else:
+        return {
+            'p1': 'Игрок 1',
+            'p2': 'Игрок 2'
+        }
+
 
 def init_db():
     conn = sqlite3.connect('users.db')
@@ -60,33 +74,30 @@ def init_db():
 
 init_db()
 
-#Генерация уникального кода игры
 @app.context_processor
 def utility_functions():
     def generate_game_code():
         return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return dict(generate_game_code=generate_game_code)
 
-# Получение данных игры
 def get_game_data(game_code):
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM games WHERE code=?', (game_code,))
     game = cursor.fetchone()
     conn.close()
-    if game:
-        board = list(game[3])  # Игровая доска (строка) в список
-        return {
-            "board": board,
-            "player1": game[1],
-            "player2": game[2],
-            "current_turn": game[4],
-        }
-    return None
+
+    if game is None:
+        return None
+
+    board = game[3]
+    if board is None:
+        board = "---------"
+    return list(board)
 
 @app.route('/')
 def index():
-    return render_template('aa1.html')
+    return render_template('main_index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -164,32 +175,29 @@ def admin():
             conn.close()
             return render_template('main_admin.html', users=users)
         else:
-            flash('Неправильный пароль!', 'error')  # Сообщение об ошибке
-            return render_template('main_admin_login.html')  # Перенаправляем обратно на страницу с формой ввода пароля
-    return render_template('main_admin_login.html')  # Если метод GET, показываем форму для ввода пароля
+            flash('Неправильный пароль!', 'error')
+            return render_template('main_admin_login.html')
+    return render_template('main_admin_login.html')
 
 @app.route('/new_tic_tac_toe')
 def new_game():
     if 'username' not in session:
         return redirect(url_for('login'))
-    return render_template('tic_tac_toe_new_game.html')  # Страница с кнопками "Создать игру" и "Присоедениться"
+    return render_template('tic_tac_toe_new_game.html')
 
 @app.route('/settings_tic_tac_toe/<game_code>')
 def settings_tic_tac_toe(game_code):
     return render_template('tic_tac_toe_settings.html', game_code=game_code)
-
 
 @app.route('/join_tic_tac_toe', methods=['GET', 'POST'])
 def join_game():
     if request.method == 'POST':
         game_code = request.form.get('game_code')
         if game_code:
-            # Перенаправление на страницу игры
             return redirect(url_for('game_board', game_code=game_code, player='p2'))
         else:
             return "Код игры обязателен!", 400
     return render_template('tic_tac_toe_join_game.html')
-
 
 @app.route('/tic_tac_toe/<game_code>/<player>', methods=['GET', 'POST'])
 def tic_tac_toe_game(game_code, player):
@@ -210,9 +218,8 @@ def make_move(game_code, player, position):
     if game_data is None:
         return "Игра не найдена.", 404
     board = game_data["board"]
-    if board[position] == '-':  # Если клетка свободна
-        board[position] = 'X' if player == 'player1' else 'O'  # Ход игрока
-    # Сохранить изменения в базе данных
+    if board[position] == '-':
+        board[position] = 'X' if player == 'player1' else 'O'
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
     cursor.execute('UPDATE games SET board=? WHERE code=?', (''.join(board), game_code))
@@ -220,81 +227,53 @@ def make_move(game_code, player, position):
     conn.close()
     return redirect(url_for('tic_tac_toe_game', game_code=game_code, player=player))
 
-
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
-    if request.method == 'POST':
-        message = request.form.get('message')  # Получаем сообщение из формы
-        # Логика для сохранения или передачи сообщения другим игрокам
-        add_message(game_code, message)
+    conn = sqlite3.connect('games.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM games WHERE code=?', (game_code,))
+    game = cursor.fetchone()
+    conn.close()
 
-    # Получаем список сообщений для этого игрового кода
-    messages = get_messages(game_code)
+    if game is None:
+        if player == 'p1':
+            player1_name = session['username']
+            conn = sqlite3.connect('games.db')
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO games (code, player1, player2, board, current_turn) VALUES (?, ?, ?, ?, ?)',
+                           (game_code, player1_name, None, "---------", "player1"))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('game_board', game_code=game_code, player='p1'))
+        else:
+            return "Игра с таким кодом не существует!", 404
 
-    # Получаем игровое поле (например, из базы данных)
-    game_board = get_game_board(game_code)  # Эта функция должна вернуть список из 9 элементов для поля
+    if player == 'p2':
+        player2_name = session['username']
+        conn = sqlite3.connect('games.db')
+        cursor = conn.cursor()
+        cursor.execute('UPDATE games SET player2=? WHERE code=?', (player2_name, game_code))
+        conn.commit()
+        conn.close()
+    player_names = get_player_names(game_code)
+    current_player_name = player_names.get(player, player)
 
-    return render_template('tic_tac_toe_board.html', game_code=game_code, player=player, messages=messages, game_board=game_board)
-
-
-
-
-
-
-
-
-
-
-
-@app.route('/h/<game_code>/<player>', methods=['GET', 'POST'])
-def h_game_board(game_code, player):
-    game = games.get(game_code)
-    if not game:
-        flash("Игра не найдена!", "error")
-        return redirect(url_for('index'))
-
-    # Обработка сообщений
     if request.method == 'POST':
         message = request.form.get('message')
         if message:
-            formatted_message = f"Игрок {player}: {message}"
-            game['messages'].append(formatted_message)
+            add_message(game_code, f"{current_player_name}: {message}")
 
-    return render_template('h1.html', game_code=game_code, player=player, game_board=game['board'], messages=game['messages'])
+    messages = get_messages(game_code)
+    game_board = get_game_board(game_code)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@app.route('/h/new', methods=['POST'])
-def new_game_h():
-    game_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    games[game_code] = {"board": [" "] * 9, "messages": []}
-    return redirect(url_for('h_game_board', game_code=game_code, player='p1'))
-
-
-@app.route('/h/join', methods=['POST'])
-def join_game_h():
-    game_code = request.form.get('game_code')
-    if game_code in games:
-        return redirect(url_for('h_game_board', game_code=game_code, player='p2'))
-    else:
-        flash("Код игры не найден!", "error")
-        return redirect(url_for('index'))
-
+    return render_template(
+        'tic_tac_toe_board.html',
+        game_code=game_code,
+        player=player,
+        messages=messages,
+        game_board=game_board,
+        player_name=current_player_name
+    )
 
 @app.route('/logout')
 def logout():
