@@ -275,6 +275,7 @@ def game_board(game_code, player):
         player_name=current_player_name
     )
 
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)

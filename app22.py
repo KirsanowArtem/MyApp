@@ -246,7 +246,6 @@ def make_move(game_code):
 
     return jsonify({'success': True, 'board': ''.join(board), 'next_turn': next_turn})
 
-
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
     conn = sqlite3.connect('games.db')
@@ -302,14 +301,21 @@ def game_board(game_code, player):
         player_name=current_player_name
     )
 
+@app.route('/get_messages/<game_code>', methods=['GET'])
+def get_messages_route(game_code):
+    messages = get_messages(game_code)  # Функция должна возвращать список сообщений из базы данных
+    return jsonify({'messages': messages})
+
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-"""
+
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
 """
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+"""
