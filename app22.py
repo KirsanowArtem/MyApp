@@ -255,16 +255,22 @@ def game_board(game_code, player):
         cursor.execute('UPDATE games SET player2=? WHERE code=?', (player2_name, game_code))
         conn.commit()
         conn.close()
+
     player_names = get_player_names(game_code)
     current_player_name = player_names.get(player, player)
 
     if request.method == 'POST':
         message = request.form.get('message')
         if message:
-            add_message(game_code, f"{current_player_name}: {message}")
+            # Добавляем форматирование имени игрока и двоеточия
+            formatted_message = f"<b>{current_player_name}:</b><br> {message}"
+            add_message(game_code, formatted_message)
 
     messages = get_messages(game_code)
     game_board = get_game_board(game_code)
+
+    # Преобразуем символы новой строки на <br> для отображения
+    messages = [message.replace('\n', '<br>') for message in messages]
 
     return render_template(
         'tic_tac_toe_board.html',
@@ -275,15 +281,15 @@ def game_board(game_code, player):
         player_name=current_player_name
     )
 
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-
+"""
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
 """
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-"""

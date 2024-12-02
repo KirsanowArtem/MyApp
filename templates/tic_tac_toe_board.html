@@ -5,72 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe</title>
     <style>
+        /* Основной стиль для тела страницы */
         body {
-            display: flex;
-            margin: 0;
-            font-family: Arial, sans-serif;
+            display: flex; /* Используем flexbox для выравнивания */
+            margin: 0; /* Убираем стандартные отступы */
+            font-family: Arial, sans-serif; /* Устанавливаем шрифт */
         }
 
+        /* Контейнер чата */
         #chat-container {
-            width: 30%;
-            border-right: 1px solid #ccc;
-            padding: 10px;
-            box-sizing: border-box;
-            height: 100vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            width: 20%; /* Ширина контейнера чата */
+            border-right: 1px solid #ccc; /* Граница справа */
+            padding: 10px; /* Отступы внутри контейнера */
+            box-sizing: border-box; /* Учитываем отступы и границы в размере */
+            height: 100vh; /* Высота 100% от экрана */
+            overflow-y: auto; /* Скролл по вертикали, если сообщений много */
+            display: flex; /* Используем flexbox для выравнивания */
+            flex-direction: column; /* Элементы чата располагаются по вертикали */
         }
 
+        /* Контейнер для сообщений */
         #messages-container {
-            flex: 1;
-            overflow-y: auto;
-            border-bottom: 1px solid #ccc;
-            margin-bottom: 10px;
-            padding: 5px;
+            flex: 1; /* Растягиваем контейнер сообщений на оставшееся пространство */
+            overflow-y: auto; /* Скроллинг по вертикали */
+            border-bottom: 1px solid #ccc; /* Граница снизу */
+            margin-bottom: 10px; /* Отступ снизу */
+            padding: 5px; /* Отступы внутри контейнера */
         }
 
+        /* Поле для ввода сообщения и кнопка отправки */
         #message-input, #send-button {
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 5px;
+            width: 100%; /* Ширина на всю доступную площадь */
+            height: 10vh; /* Высота 100% от экрана */
+            box-sizing: border-box; /* Учитываем отступы и границы в размере */
+            margin-top: 5px; /* Отступ сверху */
         }
 
+        /* Стиль кнопки отправки сообщения */
         #send-button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
+            background-color: #007BFF; /* Синий фон */
+            color: white; /* Белый текст */
+            border: none; /* Без границы */
+            padding: 10px; /* Внутренний отступ */
+            cursor: pointer; /* Курсор как указатель */
         }
 
+        /* Стиль при наведении на кнопку */
         #send-button:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Темнее синий при наведении */
         }
 
+        /* Контейнер для игрового поля */
         #game-board {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            box-sizing: border-box;
+            flex: 1; /* Растягиваем контейнер на оставшееся пространство */
+            display: flex; /* Используем flexbox для выравнивания */
+            align-items: center; /* Выравнивание по вертикали */
+            justify-content: center; /* Выравнивание по горизонтали */
+            padding: 20px; /* Отступы внутри контейнера */
+            box-sizing: border-box; /* Учитываем отступы и границы в размере */
         }
 
+        /* Стиль для ячеек игрового поля */
         .game-cell {
-            width: 100px;
-            height: 100px;
-            border: 1px solid #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
+            width: 100px; /* Ширина ячейки */
+            height: 100px; /* Высота ячейки */
+            border: 1px solid #ccc; /* Граница вокруг ячейки */
+            display: flex; /* Используем flexbox для выравнивания содержимого */
+            align-items: center; /* Вертикальное выравнивание */
+            justify-content: center; /* Горизонтальное выравнивание */
+            font-size: 24px; /* Размер шрифта */
+            font-weight: bold; /* Жирный шрифт */
+            cursor: pointer; /* Курсор как указатель */
         }
 
+        /* Стиль для строк игрового поля */
         .game-row {
-            display: flex;
+            display: flex; /* Элементы в строке выравниваются по горизонтали */
         }
     </style>
     <script>
@@ -92,15 +102,15 @@
 <body>
     <!-- Чат -->
     <div id="chat-container">
-        <h3>Чат для игрока {{ player }}</h3>
+        <h3>Чат для игрока {{ player_name }}</h3>
         <div id="messages-container">
             {% for message in messages %}
-                <div>{{ message }}</div>
+                <div>{{ message | safe }}</div>
             {% endfor %}
         </div>
 
         <form method="POST">
-            <input type="text" id="message-input" name="message" placeholder="Введите сообщение..." required>
+            <textarea id="message-input" name="message" placeholder="Введите сообщение..." required></textarea>
             <button type="submit" id="send-button">Отправить</button>
         </form>
     </div>
