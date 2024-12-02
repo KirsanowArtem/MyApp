@@ -245,7 +245,6 @@ def make_move(game_code, player, cell_index):
 
     return {'success': True, 'symbol': symbol}
 
-
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
     conn = sqlite3.connect('games.db')
@@ -300,7 +299,6 @@ def game_board(game_code, player):
         game_board=game_board,
         player_name=current_player_name
     )
-
 
 @app.route('/logout')
 def logout():
