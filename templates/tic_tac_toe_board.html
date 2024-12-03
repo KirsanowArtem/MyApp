@@ -86,6 +86,58 @@
         }
     </style>
 <script>
+    // Обработчик нажатия на клетку
+    function handleClick(button) {
+        const cellIndex = button.getAttribute('data-cell');
+        const player = "{{ player }}";  // Получаем игрока (p1 или p2)
+
+        console.log(`Игрок ${player} нажал на клетку ${cellIndex}`);
+
+        fetch(`/game/{{ game_code }}/move`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                cell_index: cellIndex,
+                player: player
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Ответ от сервера:", data);
+            if (data.success) {
+                updateBoard(data.board);
+                alert(`Следующий ход: ${data.next_turn}`);
+            } else {
+                alert(data.error);
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    }
+
+
+    // Обновление доски на клиенте
+    function updateBoard(board) {
+        const cells = document.querySelectorAll('.game-cell');
+        board.split('').forEach((cell, index) => {
+            cells[index].innerHTML = cell;
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // Сохранение сообщений в localStorage с тегами <br>
     function saveMessagesLocally(messages) {
         const formattedMessages = messages.map(message => message.replace(/\n/g, '<br>'));
@@ -166,7 +218,6 @@
             .catch(error => console.error('Ошибка отправки сообщения:', error));
     });
 });
-
 </script>
 </head>
 <body>

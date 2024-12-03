@@ -33,46 +33,7 @@ def get_player_names(game_code):
     cursor.execute('SELECT player1, player2 FROM games WHERE code=?', (game_code,))
     players = cursor.fetchone()
     conn.close()
-    return {"p1": players[0], "p2": players[1]} if players else {}
-
-
-def init_db():
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute(''' 
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT,
-            email TEXT UNIQUE,
-            last_login TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-    conn = sqlite3.connect('games.db')
-    cursor = conn.cursor()
-    cursor.execute(''' 
-        CREATE TABLE IF NOT EXISTS games (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            code TEXT UNIQUE,
-            player1 TEXT,
-            player2 TEXT,
-            board TEXT,
-            current_turn TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
-@app.context_processor
-def utility_functions():
-    def generate_game_code():
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    return dict(generate_game_code=generate_game_code)
+    return {"player1": players[0], "player2": players[1]} if players else {}
 
 def get_game_data(game_code):
     conn = sqlite3.connect('games.db')
@@ -87,7 +48,48 @@ def get_game_data(game_code):
     board = game[3]
     if board is None:
         board = "---------"
-    return list(board)
+    return list(board), game[4]  # Возвращаем также current_turn (игрок, чей ход)
+
+def init_db():
+    # Создание таблицы для пользователей
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
+    cursor.execute(''' 
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            email TEXT UNIQUE,
+            last_login TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+    # Создание таблицы для игр
+    conn = sqlite3.connect('games.db')
+    cursor = conn.cursor()
+    cursor.execute(''' 
+        CREATE TABLE IF NOT EXISTS games (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE,
+            p1 TEXT,
+            p2 TEXT,
+            board TEXT,
+            current_turn TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
+@app.context_processor
+def utility_functions():
+    def generate_game_code():
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return dict(generate_game_code=generate_game_code)
 
 @app.route('/')
 def index():
@@ -212,43 +214,58 @@ def make_move(game_code):
     cell_index = data.get('cell_index')
     player = data.get('player')
 
+    if (player == "p1"):
+        player = "player1"
+        return player
+    elif (player == "p2"):
+        player = "player2"
+        return player
+    else:
+        return "no"
+
+    print(f"Получен запрос: игрок {player} делает ход в клетку {cell_index} в игре {game_code}")
+
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
 
-    # Получаем текущую доску и ход
     cursor.execute('SELECT board, current_turn FROM games WHERE code=?', (game_code,))
     game_data = cursor.fetchone()
 
     if not game_data:
         conn.close()
+        print("Игра не найдена")
         return jsonify({'success': False, 'error': 'Игра не найдена'})
 
     board, current_turn = list(game_data[0]), game_data[1]
+    print(f"Текущее состояние доски: {''.join(board)}, сейчас ход игрока {current_turn}")
 
-    # Проверяем, чей ход и корректность ячейки
+    # Проверка, чей сейчас ход
     if current_turn != player:
         conn.close()
+        print("Ошибка: сейчас не ваш ход")
         return jsonify({'success': False, 'error': 'Сейчас не ваш ход'})
 
     if board[int(cell_index)] != '-':
         conn.close()
+        print("Ошибка: клетка уже занята")
         return jsonify({'success': False, 'error': 'Клетка уже занята'})
 
-    # Обновляем доску
-    board[int(cell_index)] = 'X' if player == 'p1' else 'O'
-    next_turn = 'p2' if current_turn == 'p1' else 'p1'
+    # Обновление доски в зависимости от игрока
+    if player == 'player1':
+        board[int(cell_index)] = 'X'  # 'X' для player1
+    elif player == 'player2':
+        board[int(cell_index)] = 'O'  # 'O' для player2
 
-    # Сохраняем изменения в базе данных
+    next_turn = 'player2' if current_turn == 'player1' else 'player1'
+
+    # Обновляем состояние игры в базе данных
     cursor.execute('UPDATE games SET board=?, current_turn=? WHERE code=?',
                    (''.join(board), next_turn, game_code))
     conn.commit()
-
     conn.close()
 
-    # Заменяем переносы строк на <br> для корректного отображения в HTML
-    board_with_breaks = ''.join(board).replace('\n', '<br>')
-
-    return jsonify({'success': True, 'board': board_with_breaks, 'next_turn': next_turn})
+    print(f"После хода, новое состояние доски: {''.join(board)}, следующий ход: {next_turn}")
+    return jsonify({'success': True, 'board': ''.join(board), 'next_turn': next_turn})
 
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
@@ -281,7 +298,15 @@ def game_board(game_code, player):
         conn.close()
 
     player_names = get_player_names(game_code)
-    current_player_name = player_names.get(player, player)
+
+    if (player == "p1"):
+        playerss="player1"
+    elif (player == "p2"):
+        playerss="player2"
+    else:
+        playerss="no"
+
+    current_player_name = player_names.get(playerss, playerss)
 
     if request.method == 'POST':
         message = request.form.get('message')

@@ -20,26 +20,20 @@ def get_messages(game_code):
     return game_messages.get(game_code, [])
 
 def get_game_board(game_code):
-    return [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+    conn = sqlite3.connect('games.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT board FROM games WHERE code=?', (game_code,))
+    board = cursor.fetchone()
+    conn.close()
+    return list(board[0]) if board else None
 
 def get_player_names(game_code):
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
-
-    cursor.execute("SELECT player1, player2 FROM games WHERE code = ?", (game_code,))
-    game_data = cursor.fetchone()
+    cursor.execute('SELECT player1, player2 FROM games WHERE code=?', (game_code,))
+    players = cursor.fetchone()
     conn.close()
-
-    if game_data:
-        return {
-            'p1': game_data[0],
-            'p2': game_data[1]
-        }
-    else:
-        return {
-            'p1': 'Игрок 1',
-            'p2': 'Игрок 2'
-        }
+    return {"p1": players[0], "p2": players[1]} if players else {}
 
 
 def init_db():
@@ -212,20 +206,49 @@ def tic_tac_toe_game(game_code, player):
     game_data = get_game_data(game_code)
     return render_template('tic_tac_toe_board.html', game_data=game_data, game_code=game_code, player=player)
 
-@app.route('/make_move/<game_code>/<player>/<int:position>', methods=['POST'])
-def make_move(game_code, player, position):
-    game_data = get_game_data(game_code)
-    if game_data is None:
-        return "Игра не найдена.", 404
-    board = game_data["board"]
-    if board[position] == '-':
-        board[position] = 'X' if player == 'player1' else 'O'
+@app.route('/game/<game_code>/move', methods=['POST'])
+def make_move(game_code):
+    data = request.get_json()
+    cell_index = data.get('cell_index')
+    player = data.get('player')
+
     conn = sqlite3.connect('games.db')
     cursor = conn.cursor()
-    cursor.execute('UPDATE games SET board=? WHERE code=?', (''.join(board), game_code))
+
+    # Получаем текущую доску и ход
+    cursor.execute('SELECT board, current_turn FROM games WHERE code=?', (game_code,))
+    game_data = cursor.fetchone()
+
+    if not game_data:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Игра не найдена'})
+
+    board, current_turn = list(game_data[0]), game_data[1]
+
+    # Проверяем, чей ход и корректность ячейки
+    if current_turn != player:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Сейчас не ваш ход'})
+
+    if board[int(cell_index)] != '-':
+        conn.close()
+        return jsonify({'success': False, 'error': 'Клетка уже занята'})
+
+    # Обновляем доску
+    board[int(cell_index)] = 'X' if player == 'p1' else 'O'
+    next_turn = 'p2' if current_turn == 'p1' else 'p1'
+
+    # Сохраняем изменения в базе данных
+    cursor.execute('UPDATE games SET board=?, current_turn=? WHERE code=?',
+                   (''.join(board), next_turn, game_code))
     conn.commit()
+
     conn.close()
-    return redirect(url_for('tic_tac_toe_game', game_code=game_code, player=player))
+
+    # Заменяем переносы строк на <br> для корректного отображения в HTML
+    board_with_breaks = ''.join(board).replace('\n', '<br>')
+
+    return jsonify({'success': True, 'board': board_with_breaks, 'next_turn': next_turn})
 
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
@@ -246,7 +269,8 @@ def game_board(game_code, player):
             conn.close()
             return redirect(url_for('game_board', game_code=game_code, player='p1'))
         else:
-            return "Игра с таким кодом не существует!", 404
+            errors = f'<b><p style="font-size: 100px; color: red; ">Eror 404<br>Игра с таким кодом не найдена!</b>'
+            return errors, 404
 
     if player == 'p2':
         player2_name = session['username']
@@ -255,16 +279,22 @@ def game_board(game_code, player):
         cursor.execute('UPDATE games SET player2=? WHERE code=?', (player2_name, game_code))
         conn.commit()
         conn.close()
+
     player_names = get_player_names(game_code)
     current_player_name = player_names.get(player, player)
 
     if request.method == 'POST':
         message = request.form.get('message')
         if message:
-            add_message(game_code, f"{current_player_name}: {message}")
+            # Добавляем форматирование имени игрока и двоеточия
+            formatted_message = f"<b>{current_player_name}:</b><br>  {message}"
+            add_message(game_code, formatted_message)
 
     messages = get_messages(game_code)
     game_board = get_game_board(game_code)
+
+    # Преобразуем символы новой строки на <br> для отображения
+    messages = [message.replace('\n', '<br>') for message in messages]
 
     return render_template(
         'tic_tac_toe_board.html',
@@ -274,6 +304,11 @@ def game_board(game_code, player):
         game_board=game_board,
         player_name=current_player_name
     )
+
+@app.route('/get_messages/<game_code>', methods=['GET'])
+def get_messages_route(game_code):
+    messages = get_messages(game_code)  # Функция должна возвращать список сообщений из базы данных
+    return jsonify({'messages': messages})
 
 @app.route('/logout')
 def logout():
