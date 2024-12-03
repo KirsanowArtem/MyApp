@@ -216,12 +216,10 @@ def make_move(game_code):
 
     if (player == "p1"):
         player = "player1"
-        return player
     elif (player == "p2"):
         player = "player2"
-        return player
     else:
-        return "no"
+        player = "no"
 
     print(f"Получен запрос: игрок {player} делает ход в клетку {cell_index} в игре {game_code}")
 
