@@ -86,10 +86,12 @@
         }
     </style>
 <script>
-    // Сохранение сообщений в localStorage
+    // Сохранение сообщений в localStorage с тегами <br>
     function saveMessagesLocally(messages) {
-        localStorage.setItem('chatMessages', JSON.stringify(messages));
+        const formattedMessages = messages.map(message => message.replace(/\n/g, '<br>'));
+        localStorage.setItem('chatMessages', JSON.stringify(formattedMessages));
     }
+
 
     // Загрузка сообщений из localStorage
     function loadMessagesLocally() {
@@ -105,11 +107,11 @@
                 const messagesContainer = document.getElementById('messages-container');
                 messagesContainer.innerHTML = ''; // Очищаем контейнер
 
-                // Добавляем новые сообщения
-                saveMessagesLocally(data.messages); // Сохраняем сообщения в localStorage
+                // Добавляем сообщения, используя innerHTML для интерпретации тегов <br>
+                saveMessagesLocally(data.messages);
                 data.messages.forEach(message => {
                     const messageElement = document.createElement('div');
-                    messageElement.innerHTML = message;
+                    messageElement.innerHTML = message;  // Используем innerHTML
                     messagesContainer.appendChild(messageElement);
                 });
 
@@ -118,6 +120,9 @@
             })
             .catch(error => console.error('Ошибка загрузки сообщений:', error));
     }
+
+
+
 
     // Загрузка сообщений из localStorage при загрузке страницы
     window.addEventListener('DOMContentLoaded', () => {
@@ -135,29 +140,33 @@
 
     // Отправка сообщения
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const messageInput = document.getElementById('message-input');
-            const message = messageInput.value;
+    const form = document.querySelector('form');
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const messageInput = document.getElementById('message-input');
+        let message = messageInput.value;
 
-            // Отправляем сообщение на сервер
-            fetch(location.href, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `message=${encodeURIComponent(message)}`
+        // Заменяем символы новой строки на <br>
+        message = message.replace(/\n/g, '<br>');
+
+        // Отправляем сообщение на сервер
+        fetch(location.href, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `message=${encodeURIComponent(message)}`
+        })
+            .then(response => {
+                if (response.ok) {
+                    messageInput.value = ''; // Очищаем поле ввода
+                    fetchMessages(); // Обновляем чат
+                } else {
+                    console.error('Ошибка отправки сообщения:', response.statusText);
+                }
             })
-                .then(response => {
-                    if (response.ok) {
-                        messageInput.value = ''; // Очищаем поле ввода
-                        fetchMessages(); // Обновляем чат
-                    } else {
-                        console.error('Ошибка отправки сообщения:', response.statusText);
-                    }
-                })
-                .catch(error => console.error('Ошибка отправки сообщения:', error));
-        });
+            .catch(error => console.error('Ошибка отправки сообщения:', error));
     });
+});
+
 </script>
 </head>
 <body>
@@ -169,6 +178,8 @@
                 <div>{{ message | safe }}</div>
             {% endfor %}
         </div>
+
+
 
         <form method="POST">
             <textarea id="message-input" name="message" placeholder="Введите сообщение..." required></textarea>

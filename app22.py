@@ -242,9 +242,13 @@ def make_move(game_code):
     cursor.execute('UPDATE games SET board=?, current_turn=? WHERE code=?',
                    (''.join(board), next_turn, game_code))
     conn.commit()
+
     conn.close()
 
-    return jsonify({'success': True, 'board': ''.join(board), 'next_turn': next_turn})
+    # Заменяем переносы строк на <br> для корректного отображения в HTML
+    board_with_breaks = ''.join(board).replace('\n', '<br>')
+
+    return jsonify({'success': True, 'board': board_with_breaks, 'next_turn': next_turn})
 
 @app.route('/game_board/<game_code>/<player>', methods=['GET', 'POST'])
 def game_board(game_code, player):
@@ -310,6 +314,7 @@ def get_messages_route(game_code):
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
