@@ -50,6 +50,8 @@ def get_game_data(game_code):
         board = "---------"
     return list(board), game[4]  # Возвращаем также current_turn (игрок, чей ход)
 
+
+
 def init_db():
     # Создание таблицы для пользователей
     conn = sqlite3.connect('users.db')
@@ -338,10 +340,9 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-
+"""
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=10000)
 """
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-"""
